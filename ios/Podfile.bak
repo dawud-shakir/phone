@@ -7,8 +7,6 @@ require Pod::Executable.execute_command('node', ['-p',
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
-# Suppress warnings in all pods to prevent -Werror failures
-inhibit_all_warnings!
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -26,15 +24,6 @@ target 'PhoneApp' do
   )
 
   post_install do |installer|
-    # Warn (or optionally abort) if Conda/Anaconda is active in the environment.
-    # Conda can inject non-SDK headers/tooling that break Xcode module validation.
-    if ENV['CONDA_PREFIX'] || ENV['CONDA_EXE']
-      puts "ERROR: Conda/Anaconda detected in the environment. This can contaminate iOS builds."
-      puts "Run 'conda deactivate' or use 'scripts/ios/run_pod_install_clean.sh' before continuing."
-      # Fail fast to prevent misleading build errors caused by non-SDK headers/tooling
-      abort("Conda/Anaconda detected — please deactivate Conda and retry 'pod install'.")
-    end
-
     react_native_post_install(
       installer,
       config[:reactNativePath],
@@ -53,12 +42,8 @@ target 'PhoneApp' do
         # Don't treat warnings as errors (many pods compile warnings otherwise fail under -Werror)
         config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
         config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
-        # Remove -Werror from common compiler flags so warnings won't fail the build
-        ['OTHER_CFLAGS','OTHER_CPLUSPLUSFLAGS','WARNING_CFLAGS'].each do |flag|
-          if config.build_settings[flag]
-            config.build_settings[flag] = config.build_settings[flag].gsub('-Werror','')
-          end
-        end
+        # Disable modules if they cause issues
+        config.build_settings['CLANG_ENABLE_MODULES'] = 'NO'
       end
     end
   end
