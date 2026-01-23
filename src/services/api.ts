@@ -51,19 +51,16 @@ export const apiService = {
     try {
       const formData = new FormData();
       
-      // @ts-ignore - FormData in React Native accepts uri
+      // React Native's FormData accepts uri-based file objects
       formData.append('photo', {
         uri,
         type: 'image/jpeg',
         name: 'photo.jpg',
-      });
+      } as any);
       
       const response = await fetch(`${API_BASE_URL}/photos/upload`, {
         method: 'POST',
         body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
       });
       
       if (!response.ok) {
