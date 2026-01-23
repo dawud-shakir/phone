@@ -1,0 +1,25 @@
+{
+  "photos": [
+    {
+      "id": "3cb8dcf3-8df0-4a02-9133-72256c49ecf9",
+      "imageUrl": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400",
+      "likes": 16,
+      "dislikes": 5,
+      "uploadedAt": "2026-01-23T01:21:08.412Z"
+    },
+    {
+      "id": "08534b7d-9a7f-47eb-8085-f17b58f4b3a8",
+      "imageUrl": "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=400",
+      "likes": 8,
+      "dislikes": 12,
+      "uploadedAt": "2026-01-23T01:21:08.412Z"
+    },
+    {
+      "id": "e93b51b1-98fa-49e3-a21c-23359f1a1fde",
+      "imageUrl": "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=400",
+      "likes": 22,
+      "dislikes": 3,
+      "uploadedAt": "2026-01-23T01:21:08.412Z"
+    }
+  ]
+}
