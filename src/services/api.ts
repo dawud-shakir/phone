@@ -79,7 +79,11 @@ export const apiService = {
   },
 
   getImageUrl(imageUrl: string): string {
-    // Remove the /api prefix from imageUrl and construct full URL
+    // If it's already a full URL (http/https), return as is
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    // Otherwise, construct the full URL from our server
     return imageUrl.replace('/uploads/', `${API_BASE_URL.replace('/api', '')}/uploads/`);
   }
 };
