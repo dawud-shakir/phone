@@ -1,26 +1,38 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
+ * Dog Voting App - "Dog or Not"
+ * A Hot or Not style app for dog photos
  *
  * @format
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import VotingScreen from './src/components/VotingScreen';
+import UploadScreen from './src/components/UploadScreen';
+
+type Screen = 'voting' | 'upload';
 
 function App() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('voting');
+
   return (
-    <View style={styles.container}>
-      <Text>App</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      
+      {currentScreen === 'voting' ? (
+        <VotingScreen onNavigateToUpload={() => setCurrentScreen('upload')} />
+      ) : (
+        <UploadScreen onNavigateToVoting={() => setCurrentScreen('voting')} />
+      )}
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
   },
 });
 
