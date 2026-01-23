@@ -84,6 +84,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+
+        // Build only for x86 emulators to avoid arm64 native build failures on CI/dev machines
+        ndk {
+            abiFilters "x86", "x86_64"
+        }
     }
     signingConfigs {
         debug {

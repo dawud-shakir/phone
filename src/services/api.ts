@@ -1,9 +1,10 @@
 import { DogPhoto, VoteType } from '../types';
+import { Platform } from 'react-native';
 
 // Update this to your server's IP address when running on a physical device
 // For Android emulator: use 10.0.2.2
 // For iOS simulator: use localhost
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000/api' : 'http://localhost:3000/api';
 
 export const apiService = {
   async getRandomPhoto(): Promise<DogPhoto> {
