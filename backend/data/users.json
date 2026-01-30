@@ -1,3 +1,15 @@
 {
-  "users": []
+  "users": [
+    {
+      "id": "94e32595-8af6-4d7f-b9fd-39e166b71c5f",
+      "email": "demo@test.com",
+      "password": "$2b$10$JBNhPMfNpx4F69oQs2d1U.hMJoZ0Ybq9C3FP1Yi/gNIoQtkIYYKoq",
+      "name": "Demo User",
+      "phone": "1234567890",
+      "role": "user",
+      "rating": 5,
+      "totalRatings": 0,
+      "createdAt": "2026-01-30T01:08:04.211Z"
+    }
+  ]
 }
