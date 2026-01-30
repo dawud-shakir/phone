@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { parkingApiService } from '../services/parkingApi';
-import { ParkingReservation, Driver, User } from '../types/parking';
+import { ParkingReservation, User } from '../types/parking';
 
 interface UserDashboardProps {
   user: User;
@@ -20,7 +20,6 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onLogout }) => {
   const [reservations, setReservations] = useState<ParkingReservation[]>([]);
   const [activeReservation, setActiveReservation] = useState<ParkingReservation | null>(null);
   const [loading, setLoading] = useState(false);
-  const [nearbyDrivers, setNearbyDrivers] = useState<Driver[]>([]);
 
   useEffect(() => {
     loadReservations();
@@ -46,8 +45,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onLogout }) => {
         r => r.status !== 'completed' && r.status !== 'cancelled'
       );
       setActiveReservation(active || null);
-    } catch (error: any) {
-      console.error('Error loading reservations:', error);
+    } catch {
+      console.error('Error loading reservations');
     }
   };
 
@@ -68,8 +67,8 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onLogout }) => {
       setActiveReservation(reservation);
       Alert.alert('Success', 'Parking spot request sent! Waiting for a driver...');
       loadReservations();
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to request parking spot');
+    } catch {
+      Alert.alert('Error', 'Failed to request parking spot');
     } finally {
       setLoading(false);
     }
@@ -93,7 +92,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onLogout }) => {
               );
               setActiveReservation(null);
               loadReservations();
-            } catch (error: any) {
+            } catch {
               Alert.alert('Error', 'Failed to cancel reservation');
             }
           },
@@ -108,7 +107,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ user, onLogout }) => {
     try {
       await parkingApiService.updateReservationStatus(activeReservation.id, 'swapping');
       Alert.alert('Arrival Confirmed', 'The driver will now proceed with the swap');
-    } catch (error: any) {
+    } catch {
       Alert.alert('Error', 'Failed to confirm arrival');
     }
   };

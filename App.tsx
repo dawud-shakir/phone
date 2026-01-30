@@ -19,7 +19,7 @@ function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('login');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const handleLoginSuccess = (user: User, token: string) => {
+  const handleLoginSuccess = (user: User, _token: string) => {
     setCurrentUser(user);
     if (user.role === 'driver') {
       setCurrentScreen('driver-dashboard');

@@ -45,14 +45,15 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ user, onLogout }) => 
       socket?.off('new-reservation');
       socket?.off('reservation-updated');
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id, driver?.isAvailable]);
 
   const loadDriverProfile = async () => {
     try {
       const driverData = await parkingApiService.getDriverProfile();
       setDriver(driverData);
-    } catch (error: any) {
-      console.error('Error loading driver profile:', error);
+    } catch {
+      console.error('Error loading driver profile');
     }
   };
 
@@ -66,8 +67,8 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ user, onLogout }) => 
       
       const available = data.filter(r => r.status === 'pending');
       setAvailableReservations(available);
-    } catch (error: any) {
-      console.error('Error loading reservations:', error);
+    } catch {
+      console.error('Error loading reservations');
     }
   };
 
@@ -75,7 +76,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ user, onLogout }) => 
     try {
       const updatedDriver = await parkingApiService.updateDriverAvailability(value);
       setDriver(updatedDriver);
-    } catch (error: any) {
+    } catch {
       Alert.alert('Error', 'Failed to update availability');
     }
   };
@@ -111,7 +112,7 @@ const DriverDashboard: React.FC<DriverDashboardProps> = ({ user, onLogout }) => 
         setActiveReservation(null);
         await toggleAvailability(true);
       }
-    } catch (error: any) {
+    } catch {
       Alert.alert('Error', 'Failed to update status');
     }
   };

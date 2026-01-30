@@ -1,4 +1,4 @@
-import { User, UserRole, ParkingReservation, Driver, Message, Review, Location } from '../types/parking';
+import { User, UserRole, ParkingReservation, Driver, Message, Review } from '../types/parking';
 import io, { Socket } from 'socket.io-client';
 
 const API_BASE_URL = 'http://localhost:3000/api';
