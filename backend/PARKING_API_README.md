@@ -61,8 +61,8 @@ PORT=3000 JWT_SECRET=your-secret-key node parking-server.js
 
 ### Driver Operations
 
-- `GET /api/drivers/nearby` - Get available drivers near location
-  - Query: `latitude, longitude, radius`
+- `POST /api/drivers/nearby` - Get available drivers near location
+  - Body: `{ latitude, longitude, radius }`
   - Headers: `Authorization: Bearer <token>`
   - Returns: Array of nearby drivers
 

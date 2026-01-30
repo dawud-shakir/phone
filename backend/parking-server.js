@@ -261,13 +261,18 @@ app.get('/api/users/profile', authenticateToken, (req, res) => {
 
 // ========== Driver Endpoints ==========
 
-// GET: Get available drivers near location
-app.get('/api/drivers/nearby', authenticateToken, (req, res) => {
+// POST: Get available drivers near location
+app.post('/api/drivers/nearby', authenticateToken, (req, res) => {
   try {
-    const { latitude, longitude, radius = 5000 } = req.query; // radius in meters
+    const { latitude, longitude, radius = 5000 } = req.body;
 
     if (!latitude || !longitude) {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    const coordError = validateCoordinates(latitude, longitude);
+    if (coordError) {
+      return res.status(400).json({ error: coordError });
     }
 
     const driversData = readData(DRIVERS_FILE);

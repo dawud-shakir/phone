@@ -106,11 +106,14 @@ export const parkingApiService = {
   async getNearbyDrivers(latitude: number, longitude: number, radius = 5000): Promise<Driver[]> {
     try {
       const response = await fetch(
-        `${API_BASE_URL}/drivers/nearby?latitude=${latitude}&longitude=${longitude}&radius=${radius}`,
+        `${API_BASE_URL}/drivers/nearby`,
         {
+          method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${authToken}`,
           },
+          body: JSON.stringify({ latitude, longitude, radius }),
         }
       );
 
