@@ -12,13 +12,16 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
     methods: ['GET', 'POST']
   }
 });
 
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'parking-app-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.warn('WARNING: Using auto-generated JWT secret. Set JWT_SECRET environment variable in production!');
+  return require('crypto').randomBytes(32).toString('hex');
+})();
 
 // Data file paths
 const DATA_DIR = path.join(__dirname, 'data');
@@ -29,7 +32,9 @@ const REVIEWS_FILE = path.join(DATA_DIR, 'reviews.json');
 const MESSAGES_FILE = path.join(DATA_DIR, 'messages.json');
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*'
+}));
 app.use(express.json());
 
 // Initialize data files
@@ -63,6 +68,46 @@ function writeData(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
+// Helper function to validate email format
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Helper function to validate password strength
+function validatePassword(password) {
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters long';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must contain at least one uppercase letter';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Password must contain at least one lowercase letter';
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Password must contain at least one number';
+  }
+  return null;
+}
+
+// Helper function to validate coordinates
+function validateCoordinates(latitude, longitude) {
+  const lat = parseFloat(latitude);
+  const lon = parseFloat(longitude);
+  
+  if (isNaN(lat) || isNaN(lon)) {
+    return 'Invalid coordinates';
+  }
+  if (lat < -90 || lat > 90) {
+    return 'Latitude must be between -90 and 90';
+  }
+  if (lon < -180 || lon > 180) {
+    return 'Longitude must be between -180 and 180';
+  }
+  return null;
+}
+
 // Auth middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -90,6 +135,15 @@ app.post('/api/auth/signup', async (req, res) => {
 
     if (!email || !password || !name || !phone || !role) {
       return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
     }
 
     if (role !== 'user' && role !== 'driver') {
@@ -246,6 +300,11 @@ app.put('/api/drivers/location', authenticateToken, (req, res) => {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
 
+    const coordError = validateCoordinates(latitude, longitude);
+    if (coordError) {
+      return res.status(400).json({ error: coordError });
+    }
+
     const driversData = readData(DRIVERS_FILE);
     const driver = driversData.drivers.find(d => d.userId === req.user.id);
 
@@ -340,6 +399,11 @@ app.post('/api/reservations', authenticateToken, (req, res) => {
 
     if (!latitude || !longitude) {
       return res.status(400).json({ error: 'Location is required' });
+    }
+
+    const coordError = validateCoordinates(latitude, longitude);
+    if (coordError) {
+      return res.status(400).json({ error: coordError });
     }
 
     const usersData = readData(USERS_FILE);
@@ -552,12 +616,13 @@ app.post('/api/reviews', authenticateToken, (req, res) => {
   try {
     const { reservationId, reviewedUserId, rating, comment } = req.body;
 
-    if (!reservationId || !reviewedUserId || !rating) {
+    if (!reservationId || !reviewedUserId || rating === undefined) {
       return res.status(400).json({ error: 'Reservation ID, reviewed user ID, and rating are required' });
     }
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    const numRating = parseInt(rating, 10);
+    if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+      return res.status(400).json({ error: 'Rating must be an integer between 1 and 5' });
     }
 
     const reviewsData = readData(REVIEWS_FILE);
@@ -572,7 +637,7 @@ app.post('/api/reviews', authenticateToken, (req, res) => {
       reservationId,
       reviewerId: req.user.id,
       reviewedUserId,
-      rating,
+      rating: numRating,
       comment: comment || '',
       createdAt: new Date().toISOString()
     };
@@ -585,7 +650,7 @@ app.post('/api/reviews', authenticateToken, (req, res) => {
     const user = usersData.users.find(u => u.id === reviewedUserId);
     
     if (user) {
-      const totalRating = user.rating * user.totalRatings + rating;
+      const totalRating = user.rating * user.totalRatings + numRating;
       user.totalRatings += 1;
       user.rating = totalRating / user.totalRatings;
       writeData(USERS_FILE, usersData);
@@ -640,13 +705,40 @@ app.get('/api/health', (req, res) => {
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
+  // Authenticate socket connection
+  socket.on('authenticate', (token) => {
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+      if (err) {
+        socket.emit('auth-error', { error: 'Invalid token' });
+        socket.disconnect();
+      } else {
+        socket.userId = user.id;
+        socket.emit('authenticated', { userId: user.id });
+      }
+    });
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
 
   socket.on('join-reservation', (reservationId) => {
-    socket.join(reservationId);
-    console.log(`Socket ${socket.id} joined reservation ${reservationId}`);
+    // Only allow authenticated users to join
+    if (!socket.userId) {
+      socket.emit('error', { error: 'Not authenticated' });
+      return;
+    }
+    
+    // Verify user has access to this reservation
+    const reservationsData = readData(RESERVATIONS_FILE);
+    const reservation = reservationsData.reservations.find(r => r.id === reservationId);
+    
+    if (reservation && (reservation.userId === socket.userId || reservation.driverId === socket.userId)) {
+      socket.join(reservationId);
+      console.log(`Socket ${socket.id} joined reservation ${reservationId}`);
+    } else {
+      socket.emit('error', { error: 'Unauthorized to join this reservation' });
+    }
   });
 });
 

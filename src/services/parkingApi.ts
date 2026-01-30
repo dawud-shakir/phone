@@ -422,6 +422,18 @@ export const parkingApiService = {
       
       socket.on('connect', () => {
         console.log('WebSocket connected');
+        // Authenticate socket connection
+        if (authToken) {
+          socket?.emit('authenticate', authToken);
+        }
+      });
+
+      socket.on('authenticated', (data) => {
+        console.log('WebSocket authenticated:', data.userId);
+      });
+
+      socket.on('auth-error', (error) => {
+        console.error('WebSocket auth error:', error);
       });
 
       socket.on('disconnect', () => {
